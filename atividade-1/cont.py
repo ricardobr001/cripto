@@ -6,11 +6,37 @@ class Letra:
         self.letra = letra
         self.qtdd = qtdd
 
+def menu():
+    print ('\nPara trocar alguma letra')
+    print ('Primeiro insira a letra que deseja substituir')
+    print ('Em seguida insira a letra pela qual a anterior será substítuida')
+    print ('\n0 - Zera a frase trocada')
+    print ('1 - Imprime Frase original')
+    print ('2 - Imprime Frase trocada')
+    print ('3 - Trocar letra')
+    print ('4 - Ver incidência frase original')
+    print ('5 - Ver incidência frase trocada')
+    print ('6 - Ver trocas realizadas')
+    print ('Pressione CTRL+C para finalizar o programa')
+
+#
+def substui(content, letra1, letra2):
+    l = []
+
+    for i in content:
+        if i == letra1:
+            l.append(letra2)
+        elif i == letra2:
+            l.append(letra1)
+        else:
+            l.append(i)
+    return l
+
 # Calcula a ordem de incidencia
 def incidencia(content, primeiro):
     # Inicializando a lista
     abc = []
-    for i in range(ord('a'), ord('z')):
+    for i in range(ord('a'), ord('z') + 1):
         abc.append(Letra(chr(i), 0))
 
     for i in content:
@@ -21,8 +47,11 @@ def incidencia(content, primeiro):
 
     if (primeiro):
         print ('Ordem alfabética')
+        l = []
         for i in range(ord('a'), ord('z')):
             print (str(chr(i)) + ' = ' + str(abc[i - ord('a')].qtdd))
+        abc.sort(key=lambda obj: obj.qtdd, reverse=True)
+        return abc
 
     abc.sort(key=lambda obj: obj.qtdd, reverse=True)
 
@@ -38,45 +67,45 @@ if len(sys.argv) != 2:
 # Lendo o arquivo
 FILENAME = sys.argv[1]
 f = open(FILENAME, 'r')
-content = f.read()
+content = list(f.read())
 modified_flag, modified = False, ''
 
-# Calculando a incidencia
-# incidencia(content, True)
-
-print ('\nPara trocar alguma letra')
-print ('Primeiro insira a letra que deseja substituir')
-print ('Em seguida insira a letra pela qual a anterior será substítuida')
-print ('\n0 - Zera a frase trocada')
-print ('1 - Imprime Frase original')
-print ('2 - Imprime Frase trocada')
-print ('3 - Trocar letra')
-print ('4 - Ver incidência frase original')
-print ('5 - Ver incidência frase trocada')
-print ('Pressione CTRL+C para finalizar o programa')
+menu()
+trocas = []
 
 while True:
     try:
         opc = str(input())
 
         if opc == '0':
-            modified_flag, modified = False, ''
+            modified_flag, modified, trocas = False, '', []
         elif opc == '1':
-            print (content)
+            for i in content:
+                print (i, end='')
+            print ('')
         elif opc == '2':
-            print (modified)
+            for i in modified:
+                print (i, end='')
+            print ('')
         elif opc == '3':
             letra1 = str(input('Letra 1: '))
             letra2 = str(input('Letra 2: '))
+            trocas.append([letra1, letra2])
 
             if not modified_flag:
-                modified_flag, modified = True, content.replace(letra1, letra2)
+                modified_flag, modified = True, substui(content, letra1, letra2)
             else:
-                modified = modified.replace(letra1, letra2)
+                modified = substui(modified, letra1, letra2)
         elif opc == '4':
             incidencia(content, False)
-        else:
+        elif opc == '5':
             incidencia(modified, False)
+        elif opc == '6':
+            print ('Trocas realizadas:')
+            for i in trocas:
+                print (i[0] + ' -> ' + i[1])
+        else:
+            menu()
     except KeyboardInterrupt:
         print ('Bye')
         exit()
