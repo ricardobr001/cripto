@@ -39,31 +39,44 @@ if len(sys.argv) != 2:
 FILENAME = sys.argv[1]
 f = open(FILENAME, 'r')
 content = f.read()
-modified = ''
+modified_flag, modified = False, ''
 
 # Calculando a incidencia
-incidencia(content, True)
+# incidencia(content, True)
 
 print ('\nPara trocar alguma letra')
 print ('Primeiro insira a letra que deseja substituir')
 print ('Em seguida insira a letra pela qual a anterior será substítuida')
-print ('\n1 - Imprime Frase original')
+print ('\n0 - Zera a frase trocada')
+print ('1 - Imprime Frase original')
 print ('2 - Imprime Frase trocada')
 print ('3 - Trocar letra')
+print ('4 - Ver incidência frase original')
+print ('5 - Ver incidência frase trocada')
 print ('Pressione CTRL+C para finalizar o programa')
 
 while True:
     try:
         opc = str(input())
-        if opc == '1':
+
+        if opc == '0':
+            modified_flag, modified = False, ''
+        elif opc == '1':
             print (content)
         elif opc == '2':
             print (modified)
+        elif opc == '3':
+            letra1 = str(input('Letra 1: '))
+            letra2 = str(input('Letra 2: '))
+
+            if not modified_flag:
+                modified_flag, modified = True, content.replace(letra1, letra2)
+            else:
+                modified = modified.replace(letra1, letra2)
+        elif opc == '4':
+            incidencia(content, False)
         else:
-            letra1 = str(input())
-            letra2 = str(input())
-            modified = content.replace(letra1, letra2)
             incidencia(modified, False)
-    except:
+    except KeyboardInterrupt:
         print ('Bye')
         exit()
