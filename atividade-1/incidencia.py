@@ -1,3 +1,8 @@
+'''
+    Nome: Ricardo Mendes Leal Junior
+    RA: 562262
+'''
+
 import sys
 
 # Definicao do obj Letra
