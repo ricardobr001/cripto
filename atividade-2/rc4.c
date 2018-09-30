@@ -17,15 +17,26 @@
 void inicia(unsigned char *s, unsigned char *t, unsigned char *chave);
 void troca(unsigned char *x, unsigned char *y);
 void fluxo(unsigned char *s, unsigned char *mensagem, unsigned char *cifra);
+int myStrlen(unsigned char *v);
 
 int main()
 {
     // char [-127 - 127]
     // unsigned char [0 - 255]
+    // (mensagem) -- 6d 65 6e 73 61 67 65 6d -- 8
     unsigned char chave[257], mensagem[257], vetorS[256], vetorT[256], *string, textoCifrado[257];
-    int i;
+    int i, tam;
 
-    scanf("%[^\n]s", mensagem);
+    printf("Informe quantos bytes o texto cifrado possui: ");
+    scanf("%d", &tam);
+
+    for (i = 0 ; i < tam ; i++)
+    {
+        scanf("%hhx", &mensagem[i]);
+    }
+
+    mensagem[tam] = '\0';
+
     scanf("\n%[^\n]s", chave);
 
     // Precisamos gerar um chave do tamanho da mensagem, para ser possível fazer o XOR com a mensagem
@@ -40,16 +51,16 @@ int main()
     inicia(vetorS, vetorT, chave);
     fluxo(vetorS, mensagem, textoCifrado);
 
-    printf("CRIPTOGRAFANDO!\n");
-    printf("mensagem = '%s' (%d)\n", mensagem, strlen(mensagem));
-    printf("cifra = '%s' (%d)\n", textoCifrado, strlen(textoCifrado));
+    printf("\nCRIPTOGRAFANDO!\n");
+    printf("mensagem = '%s'\n", mensagem);
+    printf("cifra = '%s'\n\n", textoCifrado);
 
     inicia(vetorS, vetorT, chave);
     fluxo(vetorS, textoCifrado, mensagem);
 
     printf("DESCRIPTOGRAFANDO!\n");
-    printf("mensagem = '%s' (%d)\n", textoCifrado, strlen(mensagem));
-    printf("cifra = '%s' (%d)\n", mensagem, strlen(textoCifrado));
+    printf("cifra = '%s'\n", textoCifrado);
+    printf("mensagem = '%s'\n", mensagem);
 
     return 0;
 }
@@ -57,8 +68,7 @@ int main()
 /* Função que inicia os vetores i e t */
 void inicia(unsigned char *s, unsigned char *t, unsigned char *chave)
 {
-    int i, j, tamanhoChave = strlen(chave);
-    printf("tamanho chave = %d\n", tamanhoChave);
+    int i, j, tamanhoChave = myStrlen(chave);
 
     // O vetor s receberá o valor de i na posição s[i]
     // Para facilitar, o vetor t, receberá na posição i o valor existente na posição (i % tamanho da chave) da chave
@@ -90,7 +100,7 @@ void troca(unsigned char *x, unsigned char *y)
 /* Função que faz o XOR, para cada byte da mensagem */
 void fluxo(unsigned char *s, unsigned char *mensagem, unsigned char *cifra)
 {
-    int i, j, k, t, tam = strlen(mensagem);
+    int i, j, k, t, tam = myStrlen(mensagem);
 
     for (i = 0, j = 0, k = 0 ; k < tam ; k++)
     {
@@ -102,4 +112,17 @@ void fluxo(unsigned char *s, unsigned char *mensagem, unsigned char *cifra)
     }
 
     cifra[tam] = '\0';
+}
+
+/* Função que conta quantos caracteres existem na str, criada para não ter warning na compilação */
+int myStrlen(unsigned char *v)
+{
+    int i = 0;
+
+    while (v[i] != '\0')
+    {
+        i++;
+    }
+
+    return i;
 }
