@@ -14,64 +14,52 @@
 #include <string.h>
 #include <stdlib.h>
 
-void stringParaInt(int *vetInt, char *vetChar);
-void descobreChave(int *original, int *cifrado, int *chave);
-int descobreValorTransferido(int *chave, int *cifrado);
+unsigned int descobreChave(unsigned int original, unsigned int cifrado);
+void descobreValorTransferido(unsigned int chave, unsigned int cifrado, unsigned int conta, unsigned int agencia);
 
 int main()
 {
-    // int = 4 bytes
-    int numerosOriginal[5], numerosCifrado[5], chave[5], msgCapturadas, i, total = 0;
-    char entrada[11], cifrado[11];
+    // int = 4 bytes = 32 bits
+    unsigned int original, cifrado, chave, conta, agencia, msgCapturadas, i;
 
-    scanf("%[^\n]s", entrada);
-    scanf("\n%[^\n]s", cifrado);
+    scanf("%u", &original);
+    scanf("%u", &cifrado);
 
-    stringParaInt(numerosOriginal, entrada); // Transformando a entrada para int
-    stringParaInt(numerosCifrado, cifrado); // Transformando a entrada cifrada para int
-    descobreChave(numerosOriginal, numerosCifrado, chave); // Descobrindo a chave
+    chave = descobreChave(original, cifrado); // Descobrindo a chave
 
-    scanf("%d", &msgCapturadas);
+    // 1111 0000 0000 0000 0000 0000 0000 0000 = 4026531840 (nossa máscara para extrair os primeiros 4 bits)
+    conta = original & 4026531840;
+
+    // 0000 1111 0000 0000 0000 0000 0000 0000 = 251658240 (nossa máscara para extrair os bits 4 a 8)
+    agencia = original & 251658240;
+
+    scanf("%u", &msgCapturadas);
 
     for (i = 0 ; i < msgCapturadas ; i++)
     {
-        scanf("\n%[^\n]s", cifrado);
-        stringParaInt(numerosCifrado, cifrado); // Transformando a entrada cifrada para int
-        total += descobreValorTransferido(chave, numerosCifrado);   // Somando o valor transferido
+        scanf("%u", &cifrado);
+        descobreValorTransferido(chave, cifrado, conta, agencia);   // Somando o valor transferido
     }
-
-    printf("%d\n", total);
 
     return 0;
 }
 
-/* Função que trata a entrada, transformando a string lida para int */
-void stringParaInt(int *vetInt, char *vetChar)
-{
-    char aux[3];
-    int i, j;
-
-    for (i = 0, j = 0 ; i < 10 ; i += 2, j++)
-    {
-        strncpy(aux, &vetChar[i], 2); // Copiando os dois bytes do vetChar para aux a partir da posição i
-        vetInt[j] = atoi(aux); // Salvando os números copiados para aux no vetInt como int
-    }
+/* Função que faz a função inversa do XOR, com o texto original e o texto cifrado (a inversa do XOR é o próprio XOR) */
+unsigned int descobreChave(unsigned int original, unsigned int cifrado)
+{    
+    return original ^ cifrado;
 }
 
-/* Função que faz a função inversa do XOR, com a entrada e o texto cifrado (a inversa do XOR é o próprio XOR) */
-void descobreChave(int *original, int *cifrado, int *chave)
+/* Função que verifica se a conta de origem e destino são a mesma da transfeência não cifrada */
+void descobreValorTransferido(unsigned int chave, unsigned int cifrado, unsigned int conta, unsigned int agencia)
 {
-    int i;
 
-    // Laço que fará a inversa do XOR, fazendo o texto original XOR texto cifrado, teremos a chave
-    for (i = 0 ; i < 5 ; i++)
+    int aux = chave ^ cifrado; // XOR para descobrir a verdadeira quantia transferida
+
+    // Caso forem da mesa agência e conta, imprime o valor transferido
+    if (((aux & 4026531840) == conta) && ((aux & 251658240) == agencia))
     {
-        chave[i] = original[i] ^ cifrado[i];
+        // 65535 = 0000 0000 0000 0000 1111 1111 1111 1111 (nossa máscara para extrair os últimos 16 bits)
+        printf("%u\n", aux & 65535);
     }
-}
-
-/* Função que retorna o valor transferido, recebe a chave e a transação cifrada */
-int descobreValorTransferido(int *chave, int *cifrado)
-{
-    return chave[4] ^ cifrado[4]; // XOR para descobrir a verdadeira quantia transferida
 }
