@@ -27,11 +27,11 @@ int main()
 
     chave = descobreChave(original, cifrado); // Descobrindo a chave
 
-    // 1111 0000 0000 0000 0000 0000 0000 0000 = 4026531840 (nossa máscara para extrair os primeiros 4 bits)
-    conta = original & 4026531840;
-
-    // 0000 1111 0000 0000 0000 0000 0000 0000 = 251658240 (nossa máscara para extrair os bits 4 a 8)
-    agencia = original & 251658240;
+    // 1111 0000 0000 0000 0000 0000 0000 0000 = F0000000 (nossa máscara para extrair os primeiros 4 bits)
+    //  F    0    0    0    0    0    0    0
+    conta = original & 0xF0000000;
+    // 0000 1111 0000 0000 0000 0000 0000 0000 = 0F000000 (nossa máscara para extrair os bits 4 a 8)
+    agencia = original & 0x0F000000;
 
     scanf("%u", &msgCapturadas);
 
@@ -57,9 +57,9 @@ void descobreValorTransferido(unsigned int chave, unsigned int cifrado, unsigned
     int aux = chave ^ cifrado; // XOR para descobrir a verdadeira quantia transferida
 
     // Caso forem da mesa agência e conta, imprime o valor transferido
-    if (((aux & 4026531840) == conta) && ((aux & 251658240) == agencia))
+    if (((aux & 0xF0000000) == conta) && ((aux & 0x0F000000) == agencia))
     {
-        // 65535 = 0000 0000 0000 0000 1111 1111 1111 1111 (nossa máscara para extrair os últimos 16 bits)
-        printf("%u\n", aux & 65535);
+        // 0000FFFF = 0000 0000 0000 0000 1111 1111 1111 1111 (nossa máscara para extrair os últimos 16 bits)
+        printf("%u\n", aux & 0x0000FFFF);
     }
 }
