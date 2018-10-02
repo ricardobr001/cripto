@@ -11,8 +11,6 @@
 
 // Bibliotecas
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 
 unsigned int descobreChave(unsigned int original, unsigned int cifrado);
 void descobreValorTransferido(unsigned int chave, unsigned int cifrado, unsigned int conta, unsigned int agencia);

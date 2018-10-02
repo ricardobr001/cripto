@@ -11,8 +11,6 @@
 
 // Bibliotecas
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 
 void inicia(unsigned char *s, unsigned char *t, unsigned char *chave);
 void troca(unsigned char *x, unsigned char *y);
@@ -24,7 +22,7 @@ int main()
     // char [-127 - 127]
     // unsigned char [0 - 255]
     // (mensagem) -- 6d 65 6e 73 61 67 65 6d -- 8
-    unsigned char chave[257], mensagem[257], vetorS[256], vetorT[256], *string, textoCifrado[257];
+    unsigned char chave[257], mensagem[257], vetorS[256], vetorT[256], textoCifrado[257];
     int i, tam;
 
     printf("Informe quantos bytes o texto cifrado possui: ");
@@ -37,6 +35,7 @@ int main()
 
     mensagem[tam] = '\0';
 
+    printf("Informe a chave: ");
     scanf("\n%[^\n]s", chave);
 
     // Precisamos gerar um chave do tamanho da mensagem, para ser possível fazer o XOR com a mensagem
