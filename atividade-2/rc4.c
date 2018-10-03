@@ -11,7 +11,9 @@
 
 // Bibliotecas
 #include <stdio.h>
+#include <stdlib.h> //strtol
 
+void trataEntrada(unsigned char *entrada, unsigned char *numeros);
 void inicia(unsigned char *s, unsigned char *t, unsigned char *chave);
 void troca(unsigned char *x, unsigned char *y);
 void fluxo(unsigned char *s, unsigned char *mensagem, unsigned char *cifra);
@@ -22,20 +24,25 @@ int main()
     // char [-127 - 127]
     // unsigned char [0 - 255]
     // (mensagem) -- 6d 65 6e 73 61 67 65 6d -- 8
-    unsigned char chave[257], mensagem[257], vetorS[256], vetorT[256], textoCifrado[257];
+    unsigned char chave[257], mensagem[257], vetorS[256], vetorT[256], textoCifrado[257], entrada[257];
     int i, tam;
 
-    printf("Informe quantos bytes o texto cifrado possui: ");
-    scanf("%d", &tam);
+    printf("entrada: ");
+    scanf("%[^\n]s", entrada);
+    printf("%s\n", entrada);
 
-    for (i = 0 ; i < tam ; i++)
-    {
-        scanf("%hhx", &mensagem[i]);
-    }
+    // entrada
+    // scanf("%d", &tam);
+    //
+    // for (i = 0 ; i < tam ; i++)
+    // {
+    //     scanf("%hhx", &mensagem[i]);
+    // }
 
-    mensagem[tam] = '\0';
+    trataEntrada(entrada, mensagem);
+    // mensagem[myStrlen(entrada/2)] = '\0';
 
-    printf("Informe a chave: ");
+    // printf("Informe a chave: ");
     scanf("\n%[^\n]s", chave);
 
     // Precisamos gerar um chave do tamanho da mensagem, para ser possível fazer o XOR com a mensagem
@@ -47,12 +54,12 @@ int main()
     // Para descriptografar a mensagem cifrada, fazemos a mesma coisa, invertendo, onde a mensagem será
     // Nosso texto cifrado, e a chave precisa ser a MESMA, se não a chave de fluxo gerada será diferente
     // Fazendo as operações teremos a mensagem de volta
-    inicia(vetorS, vetorT, chave);
-    fluxo(vetorS, mensagem, textoCifrado);
-
-    printf("\nCRIPTOGRAFANDO!\n");
-    printf("mensagem = '%s'\n", mensagem);
-    printf("cifra = '%s'\n\n", textoCifrado);
+    // inicia(vetorS, vetorT, chave);
+    // fluxo(vetorS, mensagem, textoCifrado);
+    //
+    // printf("\nCRIPTOGRAFANDO!\n");
+    // printf("mensagem = '%s'\n", mensagem);
+    // printf("cifra = '%s'\n\n", textoCifrado);
 
     inicia(vetorS, vetorT, chave);
     fluxo(vetorS, textoCifrado, mensagem);
@@ -62,6 +69,23 @@ int main()
     printf("mensagem = '%s'\n", mensagem);
 
     return 0;
+}
+
+void trataEntrada(unsigned char *entrada, unsigned char *numeros)
+{
+    int i, j, tam = myStrlen(entrada);
+    char aux[3];
+
+    for (i = 0 ; i < tam ; i+=2, j++)
+    {
+        aux[0] = entrada[i];
+        aux[1] = entrada[i+1];
+        aux[2] = '\0';
+        printf("aux: %s\n", aux);
+        numeros[j] = (unsigned char) strtol(aux, NULL, 16);
+    }
+
+    numeros[j] = '\0';
 }
 
 /* Função que inicia os vetores i e t */
