@@ -11,38 +11,26 @@
 
 // Bibliotecas
 #include <stdio.h>
-#include <stdlib.h> //strtol
+#include <string.h> // strlen
+#include <stdlib.h> // strtol
 
-void trataEntrada(unsigned char *entrada, unsigned char *numeros);
-void inicia(unsigned char *s, unsigned char *t, unsigned char *chave);
+int trataEntrada(char *entrada, unsigned char *numeros);
+void inicia(unsigned char *s, unsigned char *t, unsigned char *chave, int tam);
 void troca(unsigned char *x, unsigned char *y);
-void fluxo(unsigned char *s, unsigned char *mensagem, unsigned char *cifra);
-int myStrlen(unsigned char *v);
+void fluxo(unsigned char *s, unsigned char *mensagem, unsigned char *cifra, int tam);
 
 int main()
 {
     // char [-127 - 127]
     // unsigned char [0 - 255]
     // (mensagem) -- 6d 65 6e 73 61 67 65 6d -- 8
-    unsigned char chave[257], mensagem[257], vetorS[256], vetorT[256], textoCifrado[257], entrada[257];
-    int i, tam;
+    unsigned char chave[257], mensagem[257], vetorS[256], vetorT[256], textoCifrado[257];
+    char entrada[257];
+    int tam;
 
-    printf("entrada: ");
     scanf("%[^\n]s", entrada);
-    printf("%s\n", entrada);
 
-    // entrada
-    // scanf("%d", &tam);
-    //
-    // for (i = 0 ; i < tam ; i++)
-    // {
-    //     scanf("%hhx", &mensagem[i]);
-    // }
-
-    trataEntrada(entrada, mensagem);
-    // mensagem[myStrlen(entrada/2)] = '\0';
-
-    // printf("Informe a chave: ");
+    tam = trataEntrada(entrada, textoCifrado);
     scanf("\n%[^\n]s", chave);
 
     // Precisamos gerar um chave do tamanho da mensagem, para ser possível fazer o XOR com a mensagem
@@ -53,57 +41,47 @@ int main()
 
     // Para descriptografar a mensagem cifrada, fazemos a mesma coisa, invertendo, onde a mensagem será
     // Nosso texto cifrado, e a chave precisa ser a MESMA, se não a chave de fluxo gerada será diferente
-    // Fazendo as operações teremos a mensagem de volta
-    // inicia(vetorS, vetorT, chave);
-    // fluxo(vetorS, mensagem, textoCifrado);
-    //
-    // printf("\nCRIPTOGRAFANDO!\n");
-    // printf("mensagem = '%s'\n", mensagem);
-    // printf("cifra = '%s'\n\n", textoCifrado);
-
-    inicia(vetorS, vetorT, chave);
-    fluxo(vetorS, textoCifrado, mensagem);
-
-    printf("DESCRIPTOGRAFANDO!\n");
-    printf("cifra = '%s'\n", textoCifrado);
-    printf("mensagem = '%s'\n", mensagem);
+    // Fazendo as operações teremos a mens2agem de volta
+    inicia(vetorS, vetorT, chave, tam);
+    fluxo(vetorS, textoCifrado, mensagem, tam);
+    
+    printf("%s\n", mensagem);
 
     return 0;
 }
 
-void trataEntrada(unsigned char *entrada, unsigned char *numeros)
+int trataEntrada(char *entrada, unsigned char *numeros)
 {
-    int i, j, tam = myStrlen(entrada);
+    int i, tam = strlen(entrada);
     char aux[3];
+    aux[2] = '\0';
 
-    for (i = 0 ; i < tam ; i+=2, j++)
+    for (i = 0 ; i < tam ; i+=2) // COnverte para hexa
     {
         aux[0] = entrada[i];
         aux[1] = entrada[i+1];
-        aux[2] = '\0';
-        printf("aux: %s\n", aux);
-        numeros[j] = (unsigned char) strtol(aux, NULL, 16);
+        numeros[i/2] = strtol(aux, NULL, 16);
     }
 
-    numeros[j] = '\0';
+    return i/2; // Retorna o tamanho do vetor de hexa
 }
 
 /* Função que inicia os vetores i e t */
-void inicia(unsigned char *s, unsigned char *t, unsigned char *chave)
+void inicia(unsigned char *s, unsigned char *t, unsigned char *chave, int tam)
 {
-    int i, j, tamanhoChave = myStrlen(chave);
+    int i, j = 0, tamChave = strlen(chave);
 
     // O vetor s receberá o valor de i na posição s[i]
     // Para facilitar, o vetor t, receberá na posição i o valor existente na posição (i % tamanho da chave) da chave
-    for (i = 0 ; i < 255 ; i++)
+    for (i = 0 ; i < 256 ; i++)
     {
         s[i] = i;
-        t[i] = chave[i % tamanhoChave];
+        t[i] = chave[i % tamChave];
     }
 
     // Neste laço ocorre a troca das posições no vetor s
     // Calculamos a posição j, onde o valor existente na posição i, será trocado com o valor existente na posição j
-    for (i = 0, j = 0 ; i < 255 ; i++)
+    for (i = 0 ; i < 256 ; i++)
     {
         j = (j + s[i] + t[i]) % 256;
         troca(&s[i], &s[j]);
@@ -121,31 +99,18 @@ void troca(unsigned char *x, unsigned char *y)
 }
 
 /* Função que faz o XOR, para cada byte da mensagem */
-void fluxo(unsigned char *s, unsigned char *mensagem, unsigned char *cifra)
+void fluxo(unsigned char *s, unsigned char *cifrado, unsigned char *msg, int tam)
 {
-    int i, j, k, t, tam = myStrlen(mensagem);
+    int i = 0 , j = 0 , k, t;
 
-    for (i = 0, j = 0, k = 0 ; k < tam ; k++)
+    for (k = 0 ; k < tam ; k++)
     {
         i = (i + 1) % 256;  // Calculando a posição de i
         j = (j + s[i]) % 256; // Calculando a posição de j
         troca(&s[i], &s[j]); // Efetuando a troca
         t = (s[i] + s[j]) % 256; // Calculando a posição t
-        cifra[k] = mensagem[k] ^ s[t]; // XOR do byte k da mensagem com o byte t da chave de fluxo
+        msg[k] = cifrado[k] ^ s[t]; // XOR do byte k da mensagem com o byte t da chave de fluxo
     }
 
-    cifra[tam] = '\0';
-}
-
-/* Função que conta quantos caracteres existem na str, criada para não ter warning na compilação */
-int myStrlen(unsigned char *v)
-{
-    int i = 0;
-
-    while (v[i] != '\0')
-    {
-        i++;
-    }
-
-    return i;
+    msg[k] = '\0';
 }
