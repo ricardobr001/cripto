@@ -11,8 +11,57 @@
 
 #include <stdio.h>
 
+void permutacao(char *v);
+
 int main()
 {
+    char textoClaro[9], chave[9];
+
+    scanf("%[^\n]s", textoClaro);
+    scanf("\n%[^\n]s", chave);
 
     return 0;
+}
+
+void permutacao(char *v)
+{
+    int i, j, metadeBaixo = 4, metadeCima = 0;
+    char auxChars[9] = {
+        0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00,
+        '\0'
+    };
+    char mask = 0x80; // 1000 0000
+    char auxBitsMascara;
+
+    // Laços que iram efetuar as trocas
+    for (i = 0 ; i < 8 ; i++)
+    {
+        for (j = 0 ; j < 8 ; j++)
+        {
+            auxBitsMascara = v[j] & mask; // Recuperando o bit que nos interessa para efetuar o OR
+
+            if (i % 2 == 0) // Se a coluna que estiver sendo copiada for par (0 -> 4), (2 -> 5), (4 -> 6), (6 -> 7)
+            {
+                auxChars[i + metadeBaixo] = auxChars[i + metadeBaixo] | auxBitsMascara; // Efetuando o OR e salvando o bit na "matriz"
+            }
+            else // Caso contrário, é uma coluna impar (1 -> 0), (3 -> 1), (5 -> 2), (7 -> 3)
+            {
+                auxChars[i + metadeCima] = auxChars[i + metadeCima] | auxBitsMascara;
+            }
+        }
+
+        mask = (mask >> 1); // Movendo o bit da mascara (1000 0000 -> 0100 0000)
+
+        if (i % 2 == 0) // Se passamos por uma "coluna" par, incrementamos o metadeBaixo em 1
+        {
+            metadeBaixo++;
+        }
+        else // O mesmo vale para uma "coluna" impar, porém decrementamos em 1
+        {
+            metadeCima--;
+        }
+    }
+
+    // No final do laço teremos a "matriz" permutada na variavel auxChars
 }
