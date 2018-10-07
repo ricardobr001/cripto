@@ -37,7 +37,7 @@ void permutacao(char *v)
     // Laços que iram efetuar as trocas
     for (i = 0 ; i < 8 ; i++)
     {
-         if (i % 2 == 0) // Se a coluna que estiver sendo copiada for par (0 -> 4), (2 -> 5), (4 -> 6), (6 -> 7)
+        if (i % 2 == 0) // Se a coluna que estiver sendo copiada for par (0 -> 4), (2 -> 5), (4 -> 6), (6 -> 7)
         {
             for (j = 0 ; j < 8 ; j++){
                 auxBitsMascara = v[j] & mask; // Recuperando o bit que nos interessa para efetuar o OR
@@ -51,7 +51,7 @@ void permutacao(char *v)
                 auxBitsMascara = v[j] & mask; // Recuperando o bit que nos interessa para efetuar o OR
                 auxChars[i + metadeCima] = auxChars[i + metadeCima] | auxBitsMascara; // Efetuando o OR e salvando o bit na "matriz"
             }
-            metadeCima++;
+            metadeCima--;
         }
 
         mask = (mask >> 1); // Movendo o bit da mascara (1000 0000 -> 0100 0000)
