@@ -67,25 +67,46 @@ unsigned long long int permutacaoDois(unsigned long long int chave);
 
 int main()
 {
-    unsigned long long int entrada = 0x696E74726F647563, chave = 0x3132333435363738;
-    unsigned long long int entradaPermutada, chavePermutada, res, aux1, aux2, auxLeft, auxRight;
-    unsigned long long int maskLeft = 0x00fffffff0000000, maskRight = 0x000000000fffffff;
+    unsigned long long int entrada = 0x696E74726F647563, chave = 0x3132333435363738; // Teste
+    unsigned long long int entradaPermutada, chavePermutada,
+    // Auxiliares
+    auxChaveShift, auxChavePermDois, auxExpansao, auxXOR, auxLeft, auxRight,
+    // Mascaras para salvar os 32-bit esq e 32-bit dir
+    maskLeft = 0x00fffffff0000000, maskRight = 0x000000000fffffff;
     int i;
 
     // Permutação inicial da entrada e permutação um da chave
     entradaPermutada = permutacaoInicial(entrada); // 64-bit
     chavePermutada = permutacaoUm(chave); // 56-bit
 
-    // printf("%012llx\n", expansao(entradaPermutada));
+    // Preparando a chave para o XOR com o texto permutado
+    auxChaveShift = shiftCircular(chavePermutada, circular_shift[0]); // Shift Circular da chave (primeira vez)
+    auxChavePermDois = permutacaoDois(auxChaveShift); // Permutação dois da chave após o shift (primeira vez)
 
-    res = shiftCircular(chavePermutada, circular_shift[0]);
-    printf("chave (56-bit): %014llx\n", res);
-    printf("chave (48-bit): %014llx\n", permutacaoDois(res));
-    // for (i = 1 ; i < 16 ; i++)
-    // {
-    //     res = shiftCircular(res, circular_shift[i]);
-    //     printf("%014llx\n", res);
-    // }
+    // Antes de efetuar a expansão, devemos salvar os 32-bit da direita em uma variavél auxiliar
+    auxLeft = entradaPermutada & maskLeft;
+    auxRight = entradaPermutada & maskRight;
+
+    // Preparando o texto permutado para o XOR com a chave
+    auxExpansao = expansao(entradaPermutada); // Expansao da entrada permutada (primeira vez)
+    
+    // XOR do texto permutado com a chave perm 2 (primeira vez -> 48-bit)
+    auxXOR = auxExpansao ^ auxChavePermDois;
+
+    // Após o XOR, fazer a substituição utilizando a sBox
+
+    // Após a substituição, fazer a permutação P
+
+    // Agora devemos fazer o XOR entre o auxLeft e o auxRight (MODIFICADO)
+
+    // O auxRight recebe o resultado do XOR entre esq e dir
+    // O auxLeft recebe o auxRight NÃO MODIFICADO
+
+    // Laço que executará os 16 rounds
+    for (i = 1 ; i < 16 ; i++)
+    {
+        auxChaveShift = shiftCircular(auxChaveShift, circular_shift[i]); // Nas próximas iterações usamos a chave com shift da iteração anterior
+    }
 
     return 0;
 }
