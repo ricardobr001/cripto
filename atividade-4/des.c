@@ -31,7 +31,7 @@ int permutacao_um[56] = {
     63, 55, 47, 39, 31, 23, 15,
      7, 62, 54, 46, 38, 30, 22,
     14,  6, 61, 53, 45, 37, 29,
-    21, 13, 5, 28, 20, 12, 4
+    21, 13,  5, 28, 20, 12,  4
 };
 
 int permutacao_dois[48] = {
@@ -48,7 +48,7 @@ int circular_shift[16] = {
     1, 2, 2, 2, 2, 2, 2, 1
 };
 
-int expansao[48] = {
+int tabela_expansao[48] = {
     32,  1,  2,  3,  4,  5,
      4,  5,  6,  7,  8,  9,
      8,  9, 10, 11, 12, 13,
@@ -62,6 +62,8 @@ int expansao[48] = {
 unsigned long long int permutacaoInicial(unsigned long long int entrada);
 unsigned long long int permutacaoUm(unsigned long long int chave);
 unsigned long long int shiftCircular(unsigned long long int chave, int shift);
+unsigned long long int expansao(unsigned long long int texto);
+unsigned long long int permutacaoDois(unsigned long long int chave);
 
 int main()
 {
@@ -74,14 +76,16 @@ int main()
     entradaPermutada = permutacaoInicial(entrada); // 64-bit
     chavePermutada = permutacaoUm(chave); // 56-bit
 
-    res = shiftCircular(chavePermutada, circular_shift[0]);
-    printf("%014llx\n", res);
+    // printf("%012llx\n", expansao(entradaPermutada));
 
-    for (i = 1 ; i < 16 ; i++)
-    {
-        res = shiftCircular(res, circular_shift[i]);
-        printf("%014llx\n", res);
-    }
+    res = shiftCircular(chavePermutada, circular_shift[0]);
+    printf("chave (56-bit): %014llx\n", res);
+    printf("chave (48-bit): %014llx\n", permutacaoDois(res));
+    // for (i = 1 ; i < 16 ; i++)
+    // {
+    //     res = shiftCircular(res, circular_shift[i]);
+    //     printf("%014llx\n", res);
+    // }
 
     return 0;
 }
@@ -154,4 +158,54 @@ unsigned long long int shiftCircular(unsigned long long int chave, int shift)
     auxRight = ((auxRight << shift) | (auxRight >> (27 - (shift - 1)))) & maskRight;
 
     return auxLeft | auxRight;
+}
+
+/* 
+ * Função que faz a expansão do texto, de 32-bit para 48-bit
+ * A função pode receber um texto de 64-bit
+ * Porém só ira fazer a expansão dos 32-bit da direita
+ * Retorna o texto da direita expandido para 48-bit
+ */
+unsigned long long int expansao(unsigned long long int texto)
+{
+    int i;
+    unsigned long long int res = 0, mask = 1;
+
+    // Laço que percorre a tabela de expansão (48-bit)
+    for (i = 0 ; i < 48 ; i++)
+    {
+        res = res | ((texto >> (32 - tabela_expansao[i])) & mask);
+
+        if (i != 47)
+        {
+            res = res << 1;
+        }
+    }
+
+    return res;
+}
+
+/* 
+ * Função que faz a redução da chave, de 56-bit para 48-bit
+ * A função recebe uma chave de 56-bit
+ * Retorna a chave reduzida de 48-bit
+ */
+unsigned long long int permutacaoDois(unsigned long long int chave)
+{
+    int i;
+    unsigned long long int res = 0, mask = 1;
+
+    // Laço que percorre a tabela permutação dois (48-bit)
+    for (i = 0 ; i < 48 ; i++)
+    {
+        // Aqui a chave possui 56-bit
+        res = res | ((chave >> (56 - permutacao_dois[i])) & mask);
+
+        if (i != 47)
+        {
+            res = res << 1;
+        }
+    }
+
+    return res;
 }
