@@ -10,7 +10,6 @@
  * ========================================================================== */
 
 #include <stdio.h>
-#include <string.h>
 
 int permutacao_inicial[64] = {
     58, 50, 42, 34, 26, 18, 10, 2,
@@ -154,9 +153,18 @@ int main()
     maskLeft = 0xffffffff00000000, maskRight = 0x00000000ffffffff;
     int i;
 
+    // Lendo a entrada e chave
+    // scanf("%llx", &entrada);
+    // scanf("%llx", &chave);
+
     // Permutação inicial da entrada e permutação um da chave
     entradaPermutada = permutacaoInicial(entrada); // 64-bit
+    printf("PLAIN TEXT: %016llx\n", entrada);
+    printf("IP: %016llx\n\n", entradaPermutada);
+
     chavePermutada = permutacaoUm(chave); // 56-bit
+    printf("CHAVE: %016llx\n", chave);
+    printf("PC1: %014llx\n\n", chavePermutada);
 
     // Copiando a entrada permutada para o res para usar o valor correto na primeira iteração
     res = entradaPermutada;
@@ -165,34 +173,46 @@ int main()
 
     for (i = 0 ; i < 16 ; i++)
     {
+        printf("CHAVE DE ROUND %d\n", i+1);
         // Preparando a chave para o XOR com o texto permutado
         auxChaveShift = shiftCircular(auxChaveShift, circular_shift[i]); // Shift Circular da chave (primeira vez)
+        printf("DESLOCAMENTO: %014llx\n", auxChaveShift);
+
         auxChavePermDois = permutacaoDois(auxChaveShift); // Permutação dois da chave após o shift (primeira vez)
+        printf("PC2: %012llx\n\n", auxChavePermDois);
 
         // Antes de efetuar a expansão, devemos salvar os 32-bit da direita em uma variavél auxiliar
         auxLeft = res & maskLeft;
         auxRight = res & maskRight;
 
+        printf("ROUND %d\n", i+1);
         // Preparando o texto permutado para o XOR com a chave
+        printf("%016llx\n", res);
         auxExpansao = expansao(res); // Expansao da entrada permutada (primeira vez)
-        
+        printf("EXPANCAO: %012llx\n", auxExpansao);
+
         // XOR do texto permutado com a chave perm 2 (primeira vez -> 48-bit)
         auxXOR = auxExpansao ^ auxChavePermDois;
+        printf("ADD KEY: %012llx\n", auxXOR);
 
         // Após o XOR, fazer a substituição utilizando a sBox
         auxSBox = substituicaoSBOX(auxXOR);
+        printf("S-BOX: %08llx\n", auxSBox);
 
         // Após a substituição, fazer a permutação P
         auxPermP = permutacaoP(auxSBox);
+        printf("PERM P: %08llx\n", auxPermP);
 
         // Agora devemos fazer o XOR entre o auxLeft e o auxRight (MODIFICADO)
         resDir = (auxLeft >> 32) ^ auxPermP;
+        printf("ADD LEFT: %08llx\n", resDir);
 
         // Salvamos os 32-bit da direita na auxLeft
         auxLeft = auxRight << 32;
 
         // E salvamos os 64-bit, 32-bit da auxLeft e 32-bit da resDir na variavel res
         res = auxLeft | resDir;
+        printf("%016llx\n\n", res);
     }
 
     // Após os 16 rounds, precisamos trocar os 32-bit da esquerda com os 32-bit da direita
@@ -205,11 +225,11 @@ int main()
     auxLeft = resDir << 32;
 
     res = auxLeft | auxRight;
+    printf("SWAP: %016llx\n\n", res);
 
     // Para finalizar, fazemos a pemutação final (permutação inicial inversa)
     res = permutacaoFinal(res);
-
-    printf("%016llx\n", res);
+    printf("IP INVERSO: %016llx\n", res);
 
     return 0;
 }
@@ -224,7 +244,7 @@ unsigned long long int permutacaoInicial(unsigned long long int entrada)
     for (i = 0 ; i < 64 ; i++)
     {
         // Salvando no res o bit de interesse, além do restante a sua esquerda
-        // Ex: Supondo 8-bit (0011 1100) queremos pegar o bit na posição 4 
+        // Ex: Supondo 8-bit (0011 1100) queremos pegar o bit na posição 4
         // (numero >> (8 - 4)) = (0000 0011)
         // Após o shift, temos que pegar o último valor, para isso utilizamos a mascara
         // (0000 0011) & (0000 0001) = (0000 0001)
@@ -242,10 +262,10 @@ unsigned long long int permutacaoInicial(unsigned long long int entrada)
     return res;
 }
 
-/* 
- * Função que faz a permutação um da chave, 
+/*
+ * Função que faz a permutação um da chave,
  * Recebe a chave de 64-bit
- * Retorna chave permutada de 56-bit 
+ * Retorna chave permutada de 56-bit
  */
 unsigned long long int permutacaoUm(unsigned long long int chave)
 {
@@ -268,7 +288,7 @@ unsigned long long int permutacaoUm(unsigned long long int chave)
     return res;
 }
 
-/* 
+/*
  * Função que faz o shift circular da chave de 56-bit
  * Separa a chave em duas partes de 28-bit e faz o shift de cada parte
  * Retorna a nova chave de 56-bit
@@ -288,7 +308,7 @@ unsigned long long int shiftCircular(unsigned long long int chave, int shift)
     return auxLeft | auxRight;
 }
 
-/* 
+/*
  * Função que faz a expansão do texto, de 32-bit para 48-bit
  * A função pode receber um texto de 64-bit
  * Porém só ira fazer a expansão dos 32-bit da direita
@@ -314,7 +334,7 @@ unsigned long long int expansao(unsigned long long int texto)
     return res;
 }
 
-/* 
+/*
  * Função que faz a redução da chave, de 56-bit para 48-bit
  * A função recebe uma chave de 56-bit
  * Retorna a chave reduzida de 48-bit
@@ -339,7 +359,7 @@ unsigned long long int permutacaoDois(unsigned long long int chave)
     return res;
 }
 
-/* 
+/*
  * Função que faz a redução/substituição do texto da direita após o XOR, de 48-bit para 32-bit
  * A função recebe um valor de 48-bit
  * Retorna um valor reduzido de 32-bit
@@ -358,7 +378,7 @@ unsigned long long int substituicaoSBOX(unsigned long long int valor)
         // (110 110) >> 4 -> (000 010)
         // (000 010) AND (000 010) -> (000 010)     // (110 110) AND (000 001) -> (000 000)
         // (000 010) OR (000 000) -> (000 010)
-        linha = ((aux >> 4) & 2) | (aux & 1); 
+        linha = ((aux >> 4) & 2) | (aux & 1);
 
         // Recuperando a coluna
         // (110 110) AND (011 110) -> (010 110)
@@ -387,7 +407,7 @@ unsigned long long int substituicaoSBOX(unsigned long long int valor)
     return res;
 }
 
-/* 
+/*
  * Função que faz a permutação final do texto da direita após a substituicão da S-BOX
  * A função recebe um valor de 32-bit
  * Retorna um valor permutado de 32-bit
@@ -412,7 +432,7 @@ unsigned long long int permutacaoP(unsigned long long int valor)
     return res;
 }
 
-/* 
+/*
  * Função que faz a permutação final do texto (permutação inicial inversa)
  * A função recebe um valor de 64-bit
  * Retorna um valor permutado de 64-bit
