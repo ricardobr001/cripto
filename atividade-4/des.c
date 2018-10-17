@@ -59,7 +59,7 @@ int tabela_expansao[48] = {
     28, 29, 30, 31, 32,  1
 };
 
-int S_box[8][64] = {
+int S_box[8][4][16] = {
     {
         //S1
         14,  4, 13,  1,  2, 15, 11,  8,  3, 10,  6, 12,  5,  9,  0,  7,
@@ -129,13 +129,15 @@ unsigned long long int permutacaoUm(unsigned long long int chave);
 unsigned long long int shiftCircular(unsigned long long int chave, int shift);
 unsigned long long int expansao(unsigned long long int texto);
 unsigned long long int permutacaoDois(unsigned long long int chave);
+unsigned long long int substituicaoSBOX(unsigned long long int valor);
+unsigned long long int permutacaoP(unsigned long long int valor);
 
 int main()
 {
     unsigned long long int entrada = 0x696E74726F647563, chave = 0x3132333435363738; // Teste
     unsigned long long int entradaPermutada, chavePermutada,
     // Auxiliares
-    auxChaveShift, auxChavePermDois, auxExpansao, auxXOR, auxLeft, auxRight,
+    auxChaveShift, auxChavePermDois, auxExpansao, auxXOR, auxLeft, auxRight, auxSBox, auxPermP,
     // Mascaras para salvar os 32-bit esq e 32-bit dir
     maskLeft = 0x00fffffff0000000, maskRight = 0x000000000fffffff;
     int i;
@@ -159,8 +161,10 @@ int main()
     auxXOR = auxExpansao ^ auxChavePermDois;
 
     // Após o XOR, fazer a substituição utilizando a sBox
+    auxSBox = substituicaoSBOX(auxXOR);
 
     // Após a substituição, fazer a permutação P
+    auxPermP = permutacaoP(auxSBox);
 
     // Agora devemos fazer o XOR entre o auxLeft e o auxRight (MODIFICADO)
 
@@ -168,10 +172,10 @@ int main()
     // O auxLeft recebe o auxRight NÃO MODIFICADO
 
     // Laço que executará os 16 rounds
-    for (i = 1 ; i < 16 ; i++)
-    {
-        auxChaveShift = shiftCircular(auxChaveShift, circular_shift[i]); // Nas próximas iterações usamos a chave com shift da iteração anterior
-    }
+    // for (i = 1 ; i < 16 ; i++)
+    // {
+    //     auxChaveShift = shiftCircular(auxChaveShift, circular_shift[i]); // Nas próximas iterações usamos a chave com shift da iteração anterior
+    // }
 
     return 0;
 }
@@ -260,6 +264,7 @@ unsigned long long int expansao(unsigned long long int texto)
     // Laço que percorre a tabela de expansão (48-bit)
     for (i = 0 ; i < 48 ; i++)
     {
+        // Aqui o texto possui 32-bit
         res = res | ((texto >> (32 - tabela_expansao[i])) & mask);
 
         if (i != 47)
@@ -288,6 +293,79 @@ unsigned long long int permutacaoDois(unsigned long long int chave)
         res = res | ((chave >> (56 - permutacao_dois[i])) & mask);
 
         if (i != 47)
+        {
+            res = res << 1;
+        }
+    }
+
+    return res;
+}
+
+/* 
+ * Função que faz a redução/substituição do texto da direita após o XOR, de 48-bit para 32-bit
+ * A função recebe um valor de 48-bit
+ * Retorna um valor reduzido de 32-bit
+ */
+unsigned long long int substituicaoSBOX(unsigned long long int valor)
+{
+    int i, j;
+    unsigned long long int res = 0, aux, linha, coluna, mask = 0x000000000000003f; // (... 0011 1111) 6 bits de interesse
+
+    for (i = 0 ; i < 8 ; i++)
+    {
+        // Salva na aux os 6 bits de interesse de cada s-box (0 até 7)
+        aux = (valor >> ((7 - i) * 6)) & mask;
+
+        // Recupera a linha da sbox que queremos utilizar
+        // (110 110) >> 4 -> (000 010)
+        // (000 010) AND (000 010) -> (000 010)     // (110 110) AND (000 001) -> (000 000)
+        // (000 010) OR (000 000) -> (000 010)
+        linha = ((aux >> 4) & 2) | (aux & 1); 
+
+        // Recuperando a coluna
+        // (110 110) AND (011 110) -> (010 110)
+        // (010 110) >> 1 -> (001 011)
+        coluna = (aux & 0x1e) >> 1;
+
+        res = res | S_box[i][linha][coluna];
+
+        if (i != 7)
+        {
+            res = res << 4;
+        }
+
+        // Testes
+        // printf("num - ");
+        // for (j = 0 ; j < 6 ; j++)
+        //     printf("%lld", (linha >> j) & 1);
+        // printf("\n");
+
+        // printf("num - ");
+        // for (j = 0 ; j < 6 ; j++)
+        //     printf("%lld", (aux >> j) & 1);
+        // printf("\taux - %2llx   linha - %llx  coluna - %lld\n\n", aux, linha, coluna);
+    }
+
+    return res;
+}
+
+/* 
+ * Função que faz a permutação final do texto da direita após a substituicão da S-BOX
+ * A função recebe um valor de 32-bit
+ * Retorna um valor permutado de 32-bit
+ */
+unsigned long long int permutacaoP(unsigned long long int valor)
+{
+    int i;
+    unsigned long long int res = 0, mask = 1;
+
+    // Laço que percorre a tabela permutação dois (32-bit)
+    for (i = 0 ; i < 32 ; i++)
+    {
+        // Aqui a variável (valor) possui 32-bit
+        res = res | ((valor >> (32 - tabela_permutacao_p[i])) & mask);
+
+        if (i != 31)
         {
             res = res << 1;
         }
