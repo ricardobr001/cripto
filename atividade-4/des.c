@@ -6,7 +6,7 @@
  * Homework 04 - DES
  *
  * Aluno: Ricardo Mendes Leal Junior    RA: 562262
- * Aluno: Lucas Alexandre Occaso        RA: 
+ * Aluno: Lucas Alexandre Occaso        RA: 620505
  * ========================================================================== */
 
 #include <stdio.h>
