@@ -124,6 +124,17 @@ int tabela_permutacao_p[32] = {
     19, 13, 30,  6, 22, 11,  4, 25
 };
 
+int permutacao_final[64] = {
+    40,  8, 48, 16, 56, 24, 64, 32,
+    39,  7, 47, 15, 55, 23, 63, 31,
+    38,  6, 46, 14, 54, 22, 62, 30,
+    37,  5, 45, 13, 53, 21, 61, 29,
+    36,  4, 44, 12, 52, 20, 60, 28,
+    35,  3, 43, 11, 51, 19, 59, 27,
+    34,  2, 42, 10, 50, 18, 58, 26,
+    33,  1, 41,  9, 49, 17, 57, 25
+};
+
 unsigned long long int permutacaoInicial(unsigned long long int entrada);
 unsigned long long int permutacaoUm(unsigned long long int chave);
 unsigned long long int shiftCircular(unsigned long long int chave, int shift);
@@ -131,51 +142,74 @@ unsigned long long int expansao(unsigned long long int texto);
 unsigned long long int permutacaoDois(unsigned long long int chave);
 unsigned long long int substituicaoSBOX(unsigned long long int valor);
 unsigned long long int permutacaoP(unsigned long long int valor);
+unsigned long long int permutacaoFinal(unsigned long long int valor);
 
 int main()
 {
     unsigned long long int entrada = 0x696E74726F647563, chave = 0x3132333435363738; // Teste
     unsigned long long int entradaPermutada, chavePermutada,
     // Auxiliares
-    auxChaveShift, auxChavePermDois, auxExpansao, auxXOR, auxLeft, auxRight, auxSBox, auxPermP,
+    auxChaveShift, auxChavePermDois, auxExpansao, auxXOR, auxLeft, auxRight, auxSBox, auxPermP, resDir, res,
     // Mascaras para salvar os 32-bit esq e 32-bit dir
-    maskLeft = 0x00fffffff0000000, maskRight = 0x000000000fffffff;
+    maskLeft = 0xffffffff00000000, maskRight = 0x00000000ffffffff;
     int i;
 
     // Permutação inicial da entrada e permutação um da chave
     entradaPermutada = permutacaoInicial(entrada); // 64-bit
     chavePermutada = permutacaoUm(chave); // 56-bit
 
-    // Preparando a chave para o XOR com o texto permutado
-    auxChaveShift = shiftCircular(chavePermutada, circular_shift[0]); // Shift Circular da chave (primeira vez)
-    auxChavePermDois = permutacaoDois(auxChaveShift); // Permutação dois da chave após o shift (primeira vez)
+    // Copiando a entrada permutada para o res para usar o valor correto na primeira iteração
+    res = entradaPermutada;
+    auxChaveShift = chavePermutada; // O mesmo vale para a chave permutada
 
-    // Antes de efetuar a expansão, devemos salvar os 32-bit da direita em uma variavél auxiliar
-    auxLeft = entradaPermutada & maskLeft;
-    auxRight = entradaPermutada & maskRight;
 
-    // Preparando o texto permutado para o XOR com a chave
-    auxExpansao = expansao(entradaPermutada); // Expansao da entrada permutada (primeira vez)
-    
-    // XOR do texto permutado com a chave perm 2 (primeira vez -> 48-bit)
-    auxXOR = auxExpansao ^ auxChavePermDois;
+    for (i = 0 ; i < 16 ; i++)
+    {
+        // Preparando a chave para o XOR com o texto permutado
+        auxChaveShift = shiftCircular(auxChaveShift, circular_shift[i]); // Shift Circular da chave (primeira vez)
+        auxChavePermDois = permutacaoDois(auxChaveShift); // Permutação dois da chave após o shift (primeira vez)
 
-    // Após o XOR, fazer a substituição utilizando a sBox
-    auxSBox = substituicaoSBOX(auxXOR);
+        // Antes de efetuar a expansão, devemos salvar os 32-bit da direita em uma variavél auxiliar
+        auxLeft = res & maskLeft;
+        auxRight = res & maskRight;
 
-    // Após a substituição, fazer a permutação P
-    auxPermP = permutacaoP(auxSBox);
+        // Preparando o texto permutado para o XOR com a chave
+        auxExpansao = expansao(res); // Expansao da entrada permutada (primeira vez)
+        
+        // XOR do texto permutado com a chave perm 2 (primeira vez -> 48-bit)
+        auxXOR = auxExpansao ^ auxChavePermDois;
 
-    // Agora devemos fazer o XOR entre o auxLeft e o auxRight (MODIFICADO)
+        // Após o XOR, fazer a substituição utilizando a sBox
+        auxSBox = substituicaoSBOX(auxXOR);
 
-    // O auxRight recebe o resultado do XOR entre esq e dir
-    // O auxLeft recebe o auxRight NÃO MODIFICADO
+        // Após a substituição, fazer a permutação P
+        auxPermP = permutacaoP(auxSBox);
 
-    // Laço que executará os 16 rounds
-    // for (i = 1 ; i < 16 ; i++)
-    // {
-    //     auxChaveShift = shiftCircular(auxChaveShift, circular_shift[i]); // Nas próximas iterações usamos a chave com shift da iteração anterior
-    // }
+        // Agora devemos fazer o XOR entre o auxLeft e o auxRight (MODIFICADO)
+        resDir = (auxLeft >> 32) ^ auxPermP;
+
+        // Salvamos os 32-bit da direita na auxLeft
+        auxLeft = auxRight << 32;
+
+        // E salvamos os 64-bit, 32-bit da auxLeft e 32-bit da resDir na variavel res
+        res = auxLeft | resDir;
+    }
+
+    // Após os 16 rounds, precisamos trocar os 32-bit da esquerda com os 32-bit da direita
+    // Recuperando os 32-bit da esquerda e da direita
+    auxLeft = res & maskLeft;
+    auxRight = res & maskRight;
+
+    resDir = auxRight;
+    auxRight = auxLeft >> 32;
+    auxLeft = resDir << 32;
+
+    res = auxLeft | auxRight;
+
+    // Para finalizar, fazemos a pemutação final (permutação inicial inversa)
+    res = permutacaoFinal(res);
+
+    printf("%016llx\n", res);
 
     return 0;
 }
@@ -208,7 +242,11 @@ unsigned long long int permutacaoInicial(unsigned long long int entrada)
     return res;
 }
 
-/* Função que faz a permutação um da chave, retorna chave permutada de 56-bit */
+/* 
+ * Função que faz a permutação um da chave, 
+ * Recebe a chave de 64-bit
+ * Retorna chave permutada de 56-bit 
+ */
 unsigned long long int permutacaoUm(unsigned long long int chave)
 {
     int i;
@@ -366,6 +404,31 @@ unsigned long long int permutacaoP(unsigned long long int valor)
         res = res | ((valor >> (32 - tabela_permutacao_p[i])) & mask);
 
         if (i != 31)
+        {
+            res = res << 1;
+        }
+    }
+
+    return res;
+}
+
+/* 
+ * Função que faz a permutação final do texto (permutação inicial inversa)
+ * A função recebe um valor de 64-bit
+ * Retorna um valor permutado de 64-bit
+ */
+unsigned long long int permutacaoFinal(unsigned long long int valor)
+{
+    int i;
+    unsigned long long int res = 0, mask = 1;
+
+    // Laço que percorre a tabela de permutação final (64-bit)
+    for (i = 0 ; i < 64 ; i++)
+    {
+        // Aqui a variável (valor) possui 64-bit
+        res = res | ((valor >> (64 - permutacao_final[i])) & mask);
+
+        if (i != 63)
         {
             res = res << 1;
         }
