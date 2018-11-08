@@ -1,23 +1,22 @@
 #include <stdio.h>
 
 int eea(int a, int b);
-int inverso(int r0, int r1);
+void invert_mod(int a, int p);
 
 int main()
 {
-    int a, b;
+    int a, b, r;
 
     scanf("%d %d", &a, &b);
 
-    printf("%d\n", eea(a, b));
-    
+    invert_mod(a, b);
 
     return 0;
 }
 
 int eea(int a, int b)
 {
-    int resto, resultado;
+    int resto = -1, resultado;
 
     // a = (b * resultado) + resto
     
@@ -25,28 +24,41 @@ int eea(int a, int b)
     // gcd(270, 192) -> 270 = (192 * 1) + 78
     // gcd(270, 192) = gcd(192, 78)
     // repete até que o resto seja diferente de 0
-    printf("q[i+1]\tr[i]\n");
     while (resto != 0)
     {
+        
         resto = a % b;
         resultado = a / b;
         a = b;
         b = resto;
-        printf("%d\t%d\n", resultado, resto);
     }
     
     return a;
 }
 
-int inverso(int r0, int r1)
+void invert_mod(int a, int p)
 {
-    int s0 = 1, s1 = 0, t0 = 0, t1 = 1;
-    int i = 1, r, q;
-    
-    // r1
-    
-    for ( ; r != 0 ; ++i)
+    int new = 1, old = 0, q = p, r, h;
+    int pos = 0;
+
+    while (a > 0)
     {
-        si = 
+        r = q % a;
+        q = q / a;
+        h = q * new + old;
+        old = new;
+        new = h;
+        q = a;
+        a = r;
+        pos = !pos;
+    }
+
+    if (pos)
+    {
+        printf("%d N\n", q);
+    }
+    else
+    {
+        printf("%d %d\n", q, (p - old));
     }
 }
