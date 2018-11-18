@@ -22,36 +22,25 @@ int main()
     // Inicializa n, e, d, p, q setando 0
     mpz_inits(n, e, d, texto, cifrado, NULL);
 
-    printf("Insira a base <10> ou <16>: ");
     scanf("%d", &base);
 
     if (base == 10)
     {
-        printf("Insira o modulo: ");
         gmp_scanf("%Zd", n); // Lendo o modulo n
-        printf("Insira o expoente: ");
         gmp_scanf("%Zd", d); // Lendo o expoente e
-        printf("Insira o texto: ");
         gmp_scanf("%Zd", cifrado);
 
         cifraDecifra(n, d, cifrado, texto);
-        gmp_printf("RES:\n%Zd\n", texto);
-    }
-    else if (base == 16)
-    {
-        printf("Insira o modulo: ");
-        gmp_scanf("%Zx", n); // Lendo o modulo n
-        printf("Insira o expoente: ");
-        gmp_scanf("%Zx", d); // Lendo o expoente e
-        printf("Insira o texto: ");
-        gmp_scanf("%Zx", cifrado);
-
-        cifraDecifra(n, d, cifrado, texto);
-        gmp_printf("RES\n%Zx\n", texto);
+        gmp_printf("%Zd\n", texto);
     }
     else
     {
-        printf("Favor escolher a base <10> ou <16>!!\n");
+        gmp_scanf("%Zx", n); // Lendo o modulo n
+        gmp_scanf("%Zx", d); // Lendo o expoente e
+        gmp_scanf("%Zx", cifrado);
+
+        cifraDecifra(n, d, cifrado, texto);
+        gmp_printf("%Zx\n", texto);
     }
 
     return 0;
