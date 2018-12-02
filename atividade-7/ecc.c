@@ -6,7 +6,7 @@
  * Homework 07 - ECC
  *
  * Aluno: Ricardo Mendes Leal Junior    RA: 562262
- * Aluno: Matheus Augusto Thomas        RA: 
+ * Aluno: Matheus Augusto Thomas        RA: 620599
  * ========================================================================== */
 
 #include <stdio.h>
@@ -18,6 +18,68 @@ typedef struct ponto
 
 Ponto ecc(int n, long long int a, long long int p, Ponto g);
 Ponto somaPontos(Ponto g);
+
+long long int mod(long long int a, long long int m) {
+    if(a < 0) {
+        return (a % m) + m;
+    } else {
+        return a % m;
+    }
+}
+
+int inverso(int a, int m) 
+{ 
+    a = a%m; 
+    for (int x=1; x<m; x++) 
+       if ((a*x) % m == 1) 
+          return x; 
+} 
+
+void toBinValue(unsigned int in, int count, int* out)
+{
+    unsigned int mask = 1U << (count-1);
+    int i;
+    for (i = 0; i < count; i++) {
+        out[i] = (in & mask) ? 1 : 0;
+        in <<= 1;
+    }
+}
+
+int size(unsigned int n) {
+    int size = 0;
+    while(n != 0) {
+        n = n/2;
+        size++;
+    }
+
+    return size;
+}
+
+int doubleLambda(Ponto p, long long int a, long long int prime) {
+
+    int x = mod((3*(p.x * p.x)+a) , prime);
+    int y = mod((2*p.y) , prime);
+
+    printf("inverso %d e %lld: %d\n", y, prime,inverso(y,prime));
+
+    int s = mod((x*(inverso(y,prime))), prime) ;
+
+    printf("Doub s: %d\n", s);
+    return s;
+}
+
+int addLambda(Ponto p, Ponto q, int prime) {
+
+    long long int x = mod((q.y - p.y),prime);
+    long long int y = mod((q.x - p.x),prime);
+    int s =  mod((x*(inverso(y,prime))), prime);
+
+    printf("x: %lld, y:%lld\n", x, y);
+
+    printf("Add s: %d\n", s);
+    return s;
+}
+
 
 int main()
 {
@@ -39,27 +101,35 @@ int main()
     return 0;
 }
 
-Ponto ecc(int n, long long int a, long long int p, Ponto g)
-{
-    int i;
-    Ponto res = g;
+Ponto generatePoint(Ponto p, Ponto q, int s, long long int prime) {
+    Ponto newPoint;
 
-    // Efetua a soma n vezes
-    for (i = 0 ; i < n ; i++)
-    {
-        // res se torna o ponto g após a soma
-        res = somaPontos(res);
-    }
+    newPoint.x = mod(((s*s) - p.x - q.x), prime);
+    newPoint.y = mod(((s*(p.x - newPoint.x)) - p.y),prime);
 
-    return res;
+    return newPoint;
 }
 
-Ponto somaPontos(Ponto g)
+Ponto ecc(int n, long long int a, long long int p, Ponto g)
 {
-    long long int lambda;
-    Ponto inf, q, r;
-    inf.x = 0; inf.y = 0;
+    int i, s, binValue[32];
 
-    // Primeiro é necessário calcular o lambda para encontrar o ponto q
+    toBinValue(n, size(n), binValue);
+    Ponto T = g;
+
+    // Efetua a soma n vezes
+    for (i = 1 ; i < size(n) ; i++)
+    {
+        printf("Number: %d\n", binValue[i]);
+        s = doubleLambda(T, a, p);
+        T = generatePoint(T, T, s, p);
+        printf("px: %lld py: %lld\n", T.x, T.y);
+        if(binValue[i] == 1) {
+            s = addLambda(T, g, p);
+            T = generatePoint(T, g, s, p);
+        }
+    }
+
+    return T;
 }
 
