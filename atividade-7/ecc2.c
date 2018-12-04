@@ -19,28 +19,12 @@ typedef struct ponto
 Ponto ecc(int n, long long int a, long long int p, Ponto g);
 Ponto somaPontos(Ponto g);
 long long int mod(long long int a, long long int m);
+long long int inverso(long long int a, long long int m);
 Ponto soma(Ponto g, Ponto q, long long int a, long long int primo);
 Ponto lambdaUm(Ponto g, Ponto q, long long int a, long long int primo);
 Ponto lambdaDois(Ponto g, Ponto q, long long int a, long long int primo, int flagPontoR);
 Ponto geraPontoQ(Ponto g, long long int lambda, long long int primo);
 Ponto geraPontoR(Ponto g, Ponto q, long long int lambda, long long int primo);
-
-int inverso(int a, int m) 
-{ 
-    printf("INVERSO: a = %d\n", a);
-    a = a%m;
-    // printf("INVERSO: a = %d\n", a);
-    for (int x=1; x<m; x++)
-    {
-        if ((a*x) % m == 1)
-        {
-            return x;
-        }
-    }
-       
-    printf("Nao fez o for\n");
-    return 0;
-}
 
 int main()
 {
@@ -68,9 +52,8 @@ Ponto ecc(int n, long long int a, long long int p, Ponto g)
     Ponto res = g;
 
     // Efetua a soma n vezes
-    for (i = 0 ; i < n-1; i++)
+    for (i = 0 ; i < n - 1 ; i++)
     {
-        printf("soma! i = %d\n", i);
         res = soma(res, g, a, p);
     }
 
@@ -84,6 +67,22 @@ long long int mod(long long int a, long long int m)
     } else {
         return a % m;
     }
+}
+
+long long int inverso(long long int a, long long int m)
+{ 
+    long long int x;
+    a = a % m;
+
+    for (x = 1 ; x < m ; x++)
+    {
+        if ((a * x) % m == 1)
+        {
+            return x;
+        }
+    }
+       
+    return 0;
 }
 
 Ponto soma(Ponto g, Ponto q, long long int a, long long int primo)
@@ -112,29 +111,22 @@ Ponto soma(Ponto g, Ponto q, long long int a, long long int primo)
     // q && g != (0,0)
     else if ((q.x != g.x) && (q.y != g.y) && (q.y != (mod(primo - g.y, primo))) && q.x && q.y && g.x && g.y)
     {
-        printf("um - qx: %lld qy: %lld gx: %lld gy: %lld mod: %lld\n", q.x, q.y, g.x, g.y, mod(primo - g.y, primo));
         r = lambdaUm(g, q, a, primo);
     }
     else
     {
-        printf("dois - qx: %lld qy: %lld gx: %lld gy: %lld mod: %lld\n", q.x, q.y, g.x, g.y,mod(primo - g.y, primo));
         r = lambdaDois(g, q, a, primo, 1);
-        // printf("Retorno r\n\n");
     }
 
-    printf("Fim da soma!\n\n");
     return r;
 }
 
 Ponto lambdaUm(Ponto g, Ponto q, long long int a, long long int primo)
 {
-    long long int lambda;
-
     // Calculo do lambda
-    printf("g.x = %lld\tq.x = %lld\n", g.x, q.x);
     long long int x = mod((g.y - q.y), primo);
     long long int y = mod((g.x - q.x), primo);
-    int s =  mod((x * (inverso(y, primo))), primo);
+    long long int s =  mod((x * (inverso(y, primo))), primo);
 
     return geraPontoR(g, q, s, primo);
 }
@@ -146,17 +138,12 @@ Ponto lambdaDois(Ponto g, Ponto q, long long int a, long long int primo, int fla
     if (flagPontoR)
     {
         // Calculo do lambda
-        printf("q.y = %lld\n", q.y);
-        int x = mod((3 * (q.x * q.x) + a), primo);
-        int y = mod((2 * q.y), primo);
-
-        printf("inverso %d e %lld: %d\n", y, primo,inverso(y,primo));
-        printf("x: %d , y: %d\n", x, y);
-        int s = mod((x*(inverso(y,primo))), primo) ;
+        long long int x = mod((3 * (q.x * q.x) + a), primo);
+        long long int y = mod((2 * q.y), primo);g
+        long long int s = mod((x * inverso(y,primo)), primo) ;
 
         
         lambda = mod(s, primo);
-        printf("lambda = %lld\n", lambda);
 
         return geraPontoR(g, q, lambda, primo);
     }
@@ -196,6 +183,5 @@ Ponto geraPontoR(Ponto g, Ponto q, long long int lambda, long long int primo)
     r.y = (lambda * (q.x - r.x)) - q.y;
     r.y = mod(r.y, primo);
 
-    printf("rx: %lld, ry: %lld\n", r.x, r.y);
     return r;
 }
