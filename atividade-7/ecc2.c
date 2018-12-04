@@ -139,7 +139,7 @@ Ponto lambdaDois(Ponto g, Ponto q, long long int a, long long int primo, int fla
     {
         // Calculo do lambda
         long long int x = mod((3 * (q.x * q.x) + a), primo);
-        long long int y = mod((2 * q.y), primo);g
+        long long int y = mod((2 * q.y), primo);
         long long int s = mod((x * inverso(y,primo)), primo) ;
 
         
